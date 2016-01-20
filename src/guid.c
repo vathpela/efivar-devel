@@ -212,9 +212,6 @@ efi_name_to_guid(const char *name, efi_guid_t *guid)
 	size_t nmemb = (end - start) / sizeof (efi_well_known_names[0]);
 	size_t namelen;
 
-	if (!name || !guid)
-		return -1;
-
 	namelen = strnlen(name, 39);
 	struct guidname key;
 	memset(&key, '\0', sizeof (key));

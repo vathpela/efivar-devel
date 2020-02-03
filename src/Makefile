@@ -5,14 +5,16 @@ include $(TOPDIR)/src/include/version.mk
 include $(TOPDIR)/src/include/rules.mk
 include $(TOPDIR)/src/include/defaults.mk
 
-LIBTARGETS=libefivar.so libefiboot.so
-STATICLIBTARGETS=libefivar.a libefiboot.a
+LIBTARGETS=libefivar.so libefiboot.so libefisec.so
+STATICLIBTARGETS=libefivar.a libefiboot.a libefisec.a
 BINTARGETS=efivar
 STATICBINTARGETS=efivar-static
-PCTARGETS=efivar.pc efiboot.pc
+PCTARGETS=efivar.pc efiboot.pc efisec.pc
 TARGETS=$(LIBTARGETS) $(BINTARGETS) $(PCTARGETS)
 STATICTARGETS=$(STATICLIBTARGETS) $(STATICBINTARGETS)
 
+LIBEFISEC_SOURCES = sec.c
+LIBEFISEC_OBJECTS = $(patsubst %.c,%.o,$(LIBEFISEC_SOURCES))
 LIBEFIBOOT_SOURCES = crc32.c creator.c disk.c gpt.c loadopt.c path-helpers.c \
 		     linux.c $(sort $(wildcard linux-*.c))
 LIBEFIBOOT_OBJECTS = $(patsubst %.c,%.o,$(LIBEFIBOOT_SOURCES))
@@ -23,8 +25,9 @@ LIBEFIVAR_OBJECTS = $(patsubst %.S,%.o,$(patsubst %.c,%.o,$(LIBEFIVAR_SOURCES)))
 EFIVAR_SOURCES = efivar.c
 GENERATED_SOURCES = include/efivar/efivar-guids.h guid-symbols.c
 MAKEGUIDS_SOURCES = makeguids.c guid.c
-ALL_SOURCES=$(LIBEFIBOOT_SOURCES) $(LIBEFIVAR_SOURCES) $(MAKEGUIDS_SOURCES) \
-	$(sort $(wildcard include/efivar/*.h)) $(GENERATED_SOURCES) $(EFIVAR_SOURCES)
+ALL_SOURCES=$(LIBEFISEC_SOURCES) $(LIBEFIBOOT_SOURCES) $(LIBEFIVAR_SOURCES) \
+	    $(MAKEGUIDS_SOURCES) $(GENERATED_SOURCES) $(EFIVAR_SOURCES) \
+	    $(sort $(wildcard include/efivar/*.h))
 
 $(call deps-of,$(ALL_SOURCES)) : | deps
 -include $(call deps-of,$(ALL_SOURCES))
@@ -86,6 +89,12 @@ libefiboot.so : | libefiboot.map libefivar.so
 libefiboot.so : LIBS=efivar
 libefiboot.so : MAP=libefiboot.map
 
+libefisec.a : $(patsubst %.o,%.static.o,$(LIBEFISEC_OBJECTS))
+
+libefisec.so : $(LIBEFISEC_OBJECTS)
+libefisec.so : | libefisec.map
+libefisec.so : MAP=libefisec.map
+
 deps : $(ALL_SOURCES)
 	@$(MAKE) -f $(SRCDIR)/include/deps.mk deps SOURCES="$(ALL_SOURCES)"
 
@@ -116,6 +125,7 @@ test : all
 .PHONY: test deps abiclean abixml
 .SECONDARY : libefivar.so.1.$(VERSION) libefivar.so.1
 .SECONDARY : libefiboot.so.1.$(VERSION) libefiboot.so.1
+.SECONDARY : libefisec.so.1.$(VERSION) libefisec.so.1
 .SECONDARY : include/efivar/efivar-guids.h guid-symbols.c
 .INTERMEDIATE : guids.bin names.bin
 .PRECIOUS : guid-symbols.o makeguids

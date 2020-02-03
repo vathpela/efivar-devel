@@ -1,0 +1,20 @@
+<abi-corpus path='libefisec.so' architecture='elf-amd-x86_64' soname='libefisec.so.1'>
+  <elf-needed>
+    <dependency name='libc.so.6'/>
+  </elf-needed>
+  <elf-function-symbols>
+    <elf-symbol name='efi_get_libefisec_version' version='LIBEFISEC_1.38' is-default-version='yes' type='func-type' binding='global-binding' visibility='default-visibility' is-defined='yes'/>
+  </elf-function-symbols>
+  <abi-instr version='1.0' address-size='64' path='&lt;artificial&gt;' comp-dir-path='src' language='LANG_C99'>
+    <type-decl name='unsigned int' size-in-bits='32' id='type-id-1'/>
+    <type-decl name='void' id='type-id-2'/>
+    <typedef-decl name='uint32_t' type-id='type-id-3' filepath='/usr/include/bits/stdint-uintn.h' line='26' column='1' id='type-id-4'/>
+    <typedef-decl name='__uint32_t' type-id='type-id-1' filepath='/usr/include/bits/types.h' line='42' column='1' id='type-id-3'/>
+    <function-decl name='efi_get_libefisec_version' mangled-name='efi_get_libefisec_version' visibility='default' binding='global' size-in-bits='64' elf-symbol-id='efi_get_libefisec_version@@LIBEFISEC_1.38'>
+      <return type-id='type-id-4'/>
+    </function-decl>
+    <function-decl name='closedir' mangled-name='closedir' filepath='/usr/include/dirent.h' line='149' column='1' visibility='default' binding='global' size-in-bits='64'>
+      <return type-id='type-id-2'/>
+    </function-decl>
+  </abi-instr>
+</abi-corpus>

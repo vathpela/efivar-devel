@@ -4,8 +4,12 @@
  * Copyright 2020 Peter Jones <pjones@redhat.com>
  */
 
+#if defined(EFIVAR_NO_EFI_TIME_T) && EFIVAR_NO_EFI_TIME_T && !defined(EFIVAR_TIME_H_)
+#define EFIVAR_TIME_H_ 1
+#endif
+
 #ifndef EFIVAR_TIME_H_
-#define EFIVAR_TIME_H_
+#define EFIVAR_TIME_H_ 1
 
 #include <stdbool.h>
 

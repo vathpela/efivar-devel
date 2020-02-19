@@ -51,6 +51,7 @@ typedef uint16_t efi_char16_t;
 typedef unsigned long uintn_t;
 typedef long intn_t;
 
+#if !defined(EFIVAR_NO_EFI_TIME_T) || EFIVAR_NO_EFI_TIME_T
 #define EFIVAR_HAVE_EFI_TIME_T 1
 
 /*
@@ -83,6 +84,7 @@ typedef struct {
 #define EFI_TIME_IN_DAYLIGHT            ((uint8_t)0x02)
 
 #define EFI_UNSPECIFIED_TIMEZONE        ((uint16_t)0x07ff)
+#endif /* !defined(EFIVAR_NO_EFI_TIME_T) || EFIVAR_NO_EFI_TIME_T */
 
 #define EFI_VARIABLE_NON_VOLATILE				((uint64_t)0x0000000000000001)
 #define EFI_VARIABLE_BOOTSERVICE_ACCESS				((uint64_t)0x0000000000000002)

@@ -11,6 +11,7 @@
 
 #include <efivar/efivar.h>
 
+#include "compiler.h"
 #include "diag.h"
 #include "util.h"
 #include "safemath.h"
@@ -22,6 +23,7 @@
 #include "gpt.h"
 #include "disk.h"
 #include "linux.h"
+#include "list.h"
 #include "crc32.h"
 #include "hexdump.h"
 #include "path-helpers.h"

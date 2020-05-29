@@ -122,6 +122,11 @@ lcm(uint64_t x, uint64_t y)
 	return (x / n) * y;
 }
 
+#define xfree(x) ({ if (x) { free(x); x = NULL; } })
+#define xclose(fd) ({ if ((fd) >= 0) { close(fd); (fd) = -1; } })
+
+#define mempcpy(dest, src, sz) ({ memcpy(dest, src, sz) + sz; })
+
 #ifndef strdupa
 #define strdupa(s)						\
        (__extension__ ({					\
@@ -323,6 +328,23 @@ debug_markers_(const char * const file, int line,
 #define log_hex(level, buf, size) log_hex_(__FILE__, __LINE__, __func__, level, buf, size)
 #define debug_hex(buf, size) log_hex(LOG_DEBUG, buf, size)
 #define dbgmk(prefix, args...) debug_markers_(__FILE__, __LINE__, __func__, LOG_DEBUG, prefix, ## args, -1)
+
+typedef struct {
+	list_t list;
+	void *ptr;
+} ptrlist_t;
+
+static inline UNUSED void
+ptrlist_add(list_t *list, char *ptr)
+{
+	ptrlist_t *pl = calloc(1, sizeof(ptrlist_t));
+	if (!pl)
+		err(1, "could not allocate memory");
+	pl->ptr = ptr;
+	list_add_tail(&pl->list, list);
+}
+#define for_each_ptr(pos, head) list_for_each(pos, head)
+#define for_each_ptr_safe(pos, tmp, head) list_for_each_safe(pos, tmp, head)
 
 static inline UNUSED int8_t hexchar_to_bin(char hex)
 {

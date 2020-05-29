@@ -128,14 +128,46 @@ find_or_alloc_secdb_entry(efi_secdb_t *top,
  * delete an entry from our internal representation
  */
 PUBLIC int
-efi_secdb_del_entry(efi_secdb_t *top UNUSED,
-		    const efi_guid_t *owner UNUSED,
-		    efi_secdb_type_t algorithm UNUSED,
-		    efi_secdb_data_t *data UNUSED,
-		    size_t datasz UNUSED)
+efi_secdb_del_entry(efi_secdb_t *top,
+		    const efi_guid_t *owner,
+		    efi_secdb_type_t algorithm,
+		    efi_secdb_data_t *data,
+		    size_t datasz)
 {
-	errno = ENOSYS;
-	return -1;
+	efi_secdb_t *secdb;
+	list_t *pos;
+	size_t sigsz = (algorithm == X509_CERT)
+		       ? datasz
+		       : secdb_entry_size_from_type(algorithm);
+	bool has_owner = false;
+
+	if (secdb_entry_has_owner_from_type(algorithm, &has_owner) <0)
+		return -1;
+
+	if (has_owner)
+		sigsz -= sizeof(efi_guid_t);
+
+	if (!top || !owner || !data || !datasz) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	secdb = find_secdb_entry(top, algorithm, datasz);
+	if (!secdb)
+		return -1;
+
+	for_each_secdb_entry(pos, &secdb->entries) {
+		secdb_entry_t *entry = list_entry(pos, secdb_entry_t, list);
+
+		if (!memcmp(data, &entry->data, sigsz) &&
+		    !efi_guid_cmp(owner, &entry->owner)) {
+			list_del(&entry->list);
+			free(entry);
+			break;
+		}
+	}
+
+	return 0;
 }
 
 static int

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPLv2
+// SPDX-License-Identifier: LGPL-2.1-or-later
 /*
  * compiler.h - a bunch of helpers for compiler-related stuff
  * Copyright Peter Jones <pjones@redhat.com>

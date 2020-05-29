@@ -3,6 +3,7 @@
 0abba7dc-e516-4167-bbf5-4d9d1c739416	fwupdate	Linux Firmware Update Tool
 0b6e5233-a65c-44c9-9407-d9ab83bfc8bd	sha224	SHA-224 hash
 126a762d-5758-4fca-8531-201a7f57f850	lenovo_boot_menu	Lenovo Boot Menu
+26dc4851-195f-4ae1-9a19-fbf883bbb35e	supermicro	Super Micro
 3b8c8162-188c-46a4-aec9-be43f1d65697	ux_capsule	Firmware update localized text image
 3bd2a492-96c0-4079-b420-fcf98ef103ed	x509_sha256	SHA-256 hash of X.509 Certificate
 3c5766e8-269c-4e34-aa14-ed776e85b3b6	rsa2048	RSA 2048 pubkey
@@ -14,6 +15,7 @@
 605dab50-e046-4300-abb6-3dd810dd8b23	shim	shim
 665d3f60-ad3e-4cad-8e26-db46eee9f1b5	lenovo_rescue	Lenovo Rescue and Recovery
 67f8444f-8743-48f1-a328-1eaab8736080	rsa2048_sha1	RSA-2048 signature of a SHA-1 hash
+70564dce-9afc-4ee3-85fc-949649d7e45c	dell	Dell
 7076876e-80c2-4ee6-aad2-28b349a6865b	x509_sha384	SHA-384 hash of X.509 Certificate
 721c8b66-426c-4e86-8e99-3457c46ab0b9	lenovo_setup	Lenovo Firmware Setup
 77fa9abd-0359-4d32-bd60-28f4e78f784b	microsoft	Microsoft

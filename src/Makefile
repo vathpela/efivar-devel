@@ -7,13 +7,13 @@ include $(TOPDIR)/src/include/defaults.mk
 
 LIBTARGETS=libefivar.so libefiboot.so libefisec.so
 STATICLIBTARGETS=libefivar.a libefiboot.a libefisec.a
-BINTARGETS=efivar
+BINTARGETS=efivar efisecdb
 STATICBINTARGETS=efivar-static
 PCTARGETS=efivar.pc efiboot.pc efisec.pc
 TARGETS=$(LIBTARGETS) $(BINTARGETS) $(PCTARGETS)
 STATICTARGETS=$(STATICLIBTARGETS) $(STATICBINTARGETS)
 
-LIBEFISEC_SOURCES = sec.c
+LIBEFISEC_SOURCES = sec.c secdb.c esl-iter.c util.c
 LIBEFISEC_OBJECTS = $(patsubst %.c,%.o,$(LIBEFISEC_SOURCES))
 LIBEFIBOOT_SOURCES = crc32.c creator.c disk.c gpt.c loadopt.c path-helpers.c \
 		     linux.c $(sort $(wildcard linux-*.c))
@@ -94,6 +94,14 @@ libefisec.a : $(patsubst %.o,%.static.o,$(LIBEFISEC_OBJECTS))
 libefisec.so : $(LIBEFISEC_OBJECTS)
 libefisec.so : | libefisec.map
 libefisec.so : MAP=libefisec.map
+
+efisecdb : efisecdb.c secdb-dump.c util.c | libefisec.so
+efisecdb : LIBS=efivar efisec dl
+
+efisecdb-static : efisecdb.c
+efisecdb-static : $(patsubst %.o,%.static.o,$(LIBEFISEC_OBJECTS) $(LIBEFIVAR_OBJECTS))
+efisecdb-static : | $(GENERATED_SOURCES)
+efisecdb-static : LIBS=efivar efisec dl
 
 deps : $(ALL_SOURCES)
 	@$(MAKE) -f $(SRCDIR)/include/deps.mk deps SOURCES="$(ALL_SOURCES)"

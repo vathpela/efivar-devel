@@ -26,5 +26,7 @@ vgcore.*
 scan-results/
 src/efivar
 src/efivar-static
+src/efisecdb
+src/efisecdb-static
 src/makeguids
 src/guid-symbols.c

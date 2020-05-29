@@ -13,6 +13,7 @@
 
 #include "compiler.h"
 #include "diag.h"
+#include "list.h"
 #include "util.h"
 #include "safemath.h"
 #include "efivar_endian.h"
@@ -23,7 +24,6 @@
 #include "gpt.h"
 #include "disk.h"
 #include "linux.h"
-#include "list.h"
 #include "crc32.h"
 #include "hexdump.h"
 #include "path-helpers.h"

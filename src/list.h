@@ -5,6 +5,7 @@
 #define _LINUX_LIST_H
 
 #include <stdbool.h>
+#include <stdlib.h>
 
 #include "compiler.h"
 #include "err.h"

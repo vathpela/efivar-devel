@@ -7,13 +7,13 @@ include $(TOPDIR)/src/include/defaults.mk
 
 LIBTARGETS=libefivar.so libefiboot.so libefisec.so
 STATICLIBTARGETS=libefivar.a libefiboot.a libefisec.a
-BINTARGETS=efivar thread-test
+BINTARGETS=efivar efisecdb thread-test
 STATICBINTARGETS=efivar-static
 PCTARGETS=efivar.pc efiboot.pc efisec.pc
 TARGETS=$(LIBTARGETS) $(BINTARGETS) $(PCTARGETS)
 STATICTARGETS=$(STATICLIBTARGETS) $(STATICBINTARGETS)
 
-LIBEFISEC_SOURCES = sec.c
+LIBEFISEC_SOURCES = sec.c secdb.c esl-iter.c util.c
 LIBEFISEC_OBJECTS = $(patsubst %.c,%.o,$(LIBEFISEC_SOURCES))
 LIBEFIBOOT_SOURCES = crc32.c creator.c disk.c gpt.c loadopt.c path-helpers.c \
 		     linux.c $(sort $(wildcard linux-*.c))
@@ -22,7 +22,8 @@ LIBEFIVAR_SOURCES = crc32.c dp.c dp-acpi.c dp-hw.c dp-media.c dp-message.c \
 	efivarfs.c error.c export.c guid.c guids.S guid-symbols.c \
 	lib.c vars.c time.c
 LIBEFIVAR_OBJECTS = $(patsubst %.S,%.o,$(patsubst %.c,%.o,$(LIBEFIVAR_SOURCES)))
-EFIVAR_SOURCES = efivar.c
+EFIVAR_SOURCES = efivar.c guid.c
+EFISECDB_SOURCES = efisecdb.c secdb-dump.c util.c
 GENERATED_SOURCES = include/efivar/efivar-guids.h guid-symbols.c
 MAKEGUIDS_SOURCES = makeguids.c guid.c util.c
 ALL_SOURCES=$(LIBEFISEC_SOURCES) $(LIBEFIBOOT_SOURCES) $(LIBEFIVAR_SOURCES) \
@@ -76,10 +77,10 @@ libefivar.so : | $(GENERATED_SOURCES) libefivar.map
 libefivar.so : LIBS=dl
 libefivar.so : MAP=libefivar.map
 
-efivar : efivar.c | libefivar.so
+efivar : $(EFIVAR_SOURCES) | libefivar.so
 efivar : LIBS=efivar dl
 
-efivar-static : efivar.c $(patsubst %.o,%.static.o,$(LIBEFIVAR_OBJECTS))
+efivar-static : $(EFIVAR_SOURCES) $(patsubst %.o,%.static.o,$(LIBEFIVAR_OBJECTS))
 efivar-static : | $(GENERATED_SOURCES)
 efivar-static : LIBS=dl
 
@@ -95,6 +96,14 @@ libefisec.a : $(patsubst %.o,%.static.o,$(LIBEFISEC_OBJECTS))
 libefisec.so : $(LIBEFISEC_OBJECTS)
 libefisec.so : | libefisec.map
 libefisec.so : MAP=libefisec.map
+
+efisecdb : $(EFISECDB_SOURCES) | libefisec.so
+efisecdb : LIBS=efivar efisec dl
+
+efisecdb-static : $(EFISECDB_SOURCES)
+efisecdb-static : $(patsubst %.o,%.static.o,$(LIBEFISEC_OBJECTS) $(LIBEFIVAR_OBJECTS))
+efisecdb-static : | $(GENERATED_SOURCES)
+efisecdb-static : LIBS=dl
 
 thread-test : thread-test.o
 thread-test : CFLAGS=$(HOST_CFLAGS) -I$(TOPDIR)/src/include/efivar

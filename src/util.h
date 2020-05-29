@@ -328,6 +328,7 @@ log_(char *file, int line, const char *func, int level, char *fmt, ...)
 			return sz;
 		rc += sz;
 	}
+	fflush(logfile_);
 	return rc;
 }
 

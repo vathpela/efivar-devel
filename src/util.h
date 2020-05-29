@@ -299,25 +299,48 @@ debug_markers_(const char * const file, int line,
 	va_end(ap);
 }
 
-#define log_(file, line, func, level, fmt, args...)			\
-	({								\
-		efi_set_loglevel(level);				\
-		FILE *logfile_ = efi_get_logfile();			\
-		int len_ = strlen(fmt);					\
-		fprintf(logfile_, "%s:%d %s(): ",			\
-			file, line, func);				\
-		fprintf(logfile_, fmt, ## args);			\
-		if (!len_ || fmt[len_ - 1] != '\n')			\
-			fprintf(logfile_, "\n");			\
-	})
+static inline int UNUSED
+log_(char *file, int line, const char *func, int level, char *fmt, ...)
+{
+	efi_set_loglevel(level);
+	FILE *logfile_ = efi_get_logfile();
+	int len_ = strlen(fmt);
+	va_list ap;
+	int rc = 0;
+	ssize_t sz;
+
+	sz = fprintf(logfile_, "%s:%d %s(): ", file, line, func);
+	if (sz < 0)
+		return sz;
+	rc += sz;
+
+	va_start(ap, fmt);
+	sz = vfprintf(logfile_, fmt, ap);
+	if (sz < 0)
+		return sz;
+	rc += sz;
+	va_end(ap);
+	if (!len_ || fmt[len_ - 1] != '\n') {
+		sz = fprintf(logfile_, "\n");
+		if (sz < 0)
+			return sz;
+		rc += sz;
+	}
+	return rc;
+}
 
 #define LOG_VERBOSE 0
 #define LOG_DEBUG 1
 #ifdef log
 #undef log
 #endif
+#ifdef EFIVAR_BUILD_ENVIRONMENT
+#define log(level, fmt, args...)
+#define debug(fmt, args...)
+#else
 #define log(level, fmt, args...) log_(__FILE__, __LINE__, __func__, level, fmt, ## args)
 #define debug(fmt, args...) log(LOG_DEBUG, fmt, ## args)
+#endif
 #define log_hex_(file, line, func, level, buf, size)			\
 	({								\
 		efi_set_loglevel(level);				\

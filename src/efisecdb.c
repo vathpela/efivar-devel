@@ -221,7 +221,6 @@ free_infiles(int status UNUSED, void *infilesp)
 	for_each_ptr_safe(pos, tmp, infiles) {
 		ptrlist_t *entry = list_entry(pos, ptrlist_t, list);
 
-		xfree(entry->ptr);
 		list_del(&entry->list);
 		free(entry);
 	}
@@ -426,7 +425,7 @@ main(int argc, char *argv[])
 
 		infile = entry->ptr;
 
-		debug("adding input file %s", infile);
+		debug("adding input file %s entry:%p", infile, entry);
 		infd = open(infile, O_RDONLY);
 		if (infd < 0)
 			err(1, "could not open \"%s\"", infile);

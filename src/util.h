@@ -195,6 +195,8 @@ lcm(uint64_t x, uint64_t y)
 		_rc;						\
 	})
 
+extern size_t HIDDEN page_size;
+
 static inline ssize_t
 get_file(uint8_t **result, const char * const fmt, ...)
 {

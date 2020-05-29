@@ -5,8 +5,10 @@
 *~
 *.a
 *.bin
-*.env
+*.C
 *.E
+*.env
+*.esl
 *.o
 *.map
 *.pc

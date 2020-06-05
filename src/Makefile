@@ -95,7 +95,7 @@ libefisec.so : $(LIBEFISEC_OBJECTS)
 libefisec.so : | libefisec.map
 libefisec.so : MAP=libefisec.map
 
-efisecdb : efisecdb.c secdb-dump.c util.c | libefisec.so
+efisecdb : efisecdb.c secdb-dump.c util.c guids.S | libefisec.so
 efisecdb : LIBS=efivar efisec dl
 
 efisecdb-static : efisecdb.c

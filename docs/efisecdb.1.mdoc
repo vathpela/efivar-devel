@@ -29,6 +29,7 @@
 .Cm Fl d Op Fl A
 |
 .Cm Fl o Ar file
+.Cm Fl L
 .Ac
 .Ek
 .Sh DESCRIPTION
@@ -93,6 +94,10 @@ Annotate the hex dump produced by
 .It Fl o Ar file | Fl Fl outfile Ar file
 Write EFI Security Database to
 .Ar file
+.It Fl L
+List the well known guids
+
+The output is tab delimited: GUID short_name desription
 .Sh EXAMPLES
 .Ss Dumping the current system's \fIDBX\fP database with annotations
 .Bd -literal -compact
@@ -144,6 +149,11 @@ host:~$ \fBefisecdb -i KEK-8be4df61-93ca-11d2-aa0d-00e098032b8c \e\p
         -g {microsoft} -r -c MicCorThiParMarRoo_2010-10-05.crt \e\p
         -g aab3960c-501e-485e-ac59-62805970a3dd -a -c pjkek.cer \e\p
         -o newkek.bin\fR\p
+.Ed
+.Ss Searching the list of well-known GUIDs
+.Bd -literal -compact
+host:~$ \fBefisecdb -L | grep shim\fR\p
+{605dab50-e046-4300-abb6-3dd810dd8b23}	{shim}	shim
 .Ed
 .Sh STANDARDS
 .Rs

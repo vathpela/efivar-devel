@@ -172,7 +172,8 @@ usage(int status)
 		"  -g, --owner-guid=<GUID>   following added entries use GUID as the owner\n"
 		"  -h, --hash=<hash>         hash value to add (\n"
 		"  -t, --type=<hash-type>    hash type to add (\"help\" lists options)\n"
-		"  -c, --certificate=<file>  certificate file to add\n",
+		"  -c, --certificate=<file>  certificate file to add\n"
+		"  -L, --list-guids          list well known guids\n",
 		program_invocation_short_name);
 	exit(status);
 }
@@ -275,6 +276,25 @@ check_hash_index(int hash_index)
 		errx(1, "hash type is not set");
 }
 
+static void
+list_guids(void)
+{
+	const struct guidname *guid = &efi_well_known_guids[0];
+	const uint64_t n = efi_n_well_known_guids;
+	unsigned int i;
+
+	debug("&guid[0]:%p n:%lu", &guid[0], n);
+	for (i = 0; i < n; i++) {
+		printf("{"GUID_FORMAT"}\t%s\t%s\n",
+			guid[i].guid.a, guid[i].guid.b,
+			guid[i].guid.c, bswap_16(guid[i].guid.d),
+			guid[i].guid.e[0], guid[i].guid.e[1],
+			guid[i].guid.e[2], guid[i].guid.e[3],
+			guid[i].guid.e[4], guid[i].guid.e[5],
+			guid[i].name, guid[i].description);
+	}
+}
+
 static efi_secdb_t *secdb;
 static list_t infiles;
 static list_t actions;
@@ -294,9 +314,10 @@ main(int argc, char *argv[])
 	bool dump = false;
 	bool annotate = false;
 	bool wants_add_actions = false;
+	bool did_list_guids = false;
 	int status = 0;
 
-	const char sopts[] = ":aAc:dfg:h:i:o:rt:v?";
+	const char sopts[] = ":aAc:dfg:h:i:Lo:rt:v?";
 	const struct option lopts[] = {
 		{"add", no_argument, NULL, 'a' },
 		{"annotate", no_argument, NULL, 'A' },
@@ -306,6 +327,7 @@ main(int argc, char *argv[])
 		{"owner-guid", required_argument, NULL, 'g' },
 		{"hash", required_argument, NULL, 'h' },
 		{"infile", required_argument, NULL, 'i' },
+		{"list-guids", no_argument, NULL, 'L' },
 		{"outfile", required_argument, NULL, 'o' },
 		{"remove", no_argument, NULL, 'r' },
 		{"type", required_argument, NULL, 't' },
@@ -400,6 +422,10 @@ main(int argc, char *argv[])
 				secdb_errx(1, "--infile requires a value");
 			ptrlist_add(&infiles, optarg);
 			break;
+		case 'L':
+			list_guids();
+			did_list_guids = true;
+			break;
 		case 'o':
 			if (outfile)
 				secdb_errx(1, "--outfile cannot be used multiple times.");
@@ -441,8 +467,11 @@ main(int argc, char *argv[])
 		setvbuf(stdout, NULL, _IONBF, 0);
 	}
 
-	if (!outfile && !dump)
+	if (!outfile && !dump) {
+		if (did_list_guids)
+			return 0;
 		errx(1, "no output specified");
+	}
 	if (list_empty(&infiles) && !wants_add_actions)
 		errx(1, "no input files or database additions");
 

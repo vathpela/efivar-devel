@@ -106,6 +106,7 @@ NM	:= $(CROSS_COMPILE)$(COMPILER)-nm
 RANLIB	:= $(CROSS_COMPILE)$(COMPILER)-ranlib
 ABIDW	:= abidw
 ABIDIFF := abidiff
+MANDOC	:= mandoc
 
 PKGS	=
 

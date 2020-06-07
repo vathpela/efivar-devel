@@ -24,7 +24,7 @@ LIBEFIVAR_SOURCES = crc32.c dp.c dp-acpi.c dp-hw.c dp-media.c dp-message.c \
 LIBEFIVAR_OBJECTS = $(patsubst %.S,%.o,$(patsubst %.c,%.o,$(LIBEFIVAR_SOURCES)))
 EFIVAR_SOURCES = efivar.c
 GENERATED_SOURCES = include/efivar/efivar-guids.h guid-symbols.c
-MAKEGUIDS_SOURCES = makeguids.c guid.c
+MAKEGUIDS_SOURCES = makeguids.c guid.c util.c
 ALL_SOURCES=$(LIBEFISEC_SOURCES) $(LIBEFIBOOT_SOURCES) $(LIBEFIVAR_SOURCES) \
 	    $(MAKEGUIDS_SOURCES) $(GENERATED_SOURCES) $(EFIVAR_SOURCES) \
 	    $(sort $(wildcard include/efivar/*.h))
@@ -62,6 +62,7 @@ makeguids : CFLAGS=$(HOST_CFLAGS)
 makeguids : LDFLAGS=$(HOST_LDFLAGS)
 makeguids : CCLDFLAGS=$(HOST_CCLDFLAGS)
 makeguids : $(MAKEGUIDS_SOURCES)
+makeguids : | makeguids.h
 
 guids.o : guids.S | guids.bin names.bin
 

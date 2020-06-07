@@ -80,11 +80,6 @@ efi_guid_to_str(const efi_guid_t *guid, char **sp)
 	return rc;
 }
 
-extern struct guidname efi_well_known_guids PUBLIC;
-extern struct guidname efi_well_known_names PUBLIC;
-extern struct guidname efi_well_known_guids_end PUBLIC;
-extern struct guidname efi_well_known_names_end PUBLIC;
-
 static int NONNULL(1, 2)
 cmpguidp(const void *p1, const void *p2)
 {
@@ -106,17 +101,16 @@ cmpnamep(const void *p1, const void *p2)
 static int NONNULL(1, 2)
 _get_common_guidname(const efi_guid_t *guid, struct guidname **result)
 {
-	intptr_t end = (intptr_t)&efi_well_known_guids_end;
-	intptr_t start = (intptr_t)&efi_well_known_guids;
-	size_t nmemb = (end - start) / sizeof (efi_well_known_guids);
-
 	struct guidname key;
 	memset(&key, '\0', sizeof (key));
 	memcpy(&key.guid, guid, sizeof (*guid));
 
 	struct guidname *tmp;
-	tmp = bsearch(&key, &efi_well_known_guids, nmemb,
-			sizeof (efi_well_known_guids), cmpguidp);
+	tmp = bsearch(&key,
+		      &efi_well_known_guids,
+		      efi_n_well_known_guids,
+		      sizeof (efi_well_known_guids[0]),
+		      cmpguidp);
 	if (!tmp) {
 		*result = NULL;
 		errno = ENOENT;
@@ -228,13 +222,11 @@ efi_symbol_to_guid(const char *symbol, efi_guid_t *guid)
 int NONNULL(1, 2) PUBLIC
 efi_name_to_guid(const char *name, efi_guid_t *guid)
 {
-	intptr_t end = (intptr_t)&efi_well_known_names_end;
-	intptr_t start = (intptr_t)&efi_well_known_names;
-	size_t nmemb = (end - start) / sizeof (efi_well_known_names);
 	size_t namelen;
+	struct guidname key;
 
 	namelen = strnlen(name, 39);
-	struct guidname key;
+
 	memset(&key, '\0', sizeof (key));
 	memcpy(key.name, name, namelen);
 
@@ -247,8 +239,11 @@ efi_name_to_guid(const char *name, efi_guid_t *guid)
 	key.name[sizeof(key.name) - 1] = '\0';
 
 	struct guidname *result;
-	result = bsearch(&key, &efi_well_known_names, nmemb,
-			sizeof (efi_well_known_names), cmpnamep);
+	result = bsearch(&key,
+			 &efi_well_known_names,
+			 efi_n_well_known_names,
+			 sizeof (efi_well_known_names[0]),
+			 cmpnamep);
 	if (result != NULL) {
 		memcpy(guid, &result->guid, sizeof (*guid));
 		return 0;

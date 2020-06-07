@@ -167,7 +167,15 @@ struct guidname {
 	efi_guid_t guid;
 	char symbol[256];
 	char name[256];
-};
+	char description[256];
+} __attribute__((__aligned__(16)));
+
+extern PUBLIC const struct guidname efi_well_known_guids[];
+extern PUBLIC const struct guidname efi_well_known_guids_end;
+extern const uint64_t efi_n_well_known_guids;
+extern PUBLIC const struct guidname efi_well_known_names[];
+extern PUBLIC const struct guidname efi_well_known_names_end;
+extern const uint64_t efi_n_well_known_names;
 
 #endif /* LIBEFIVAR_GUID */
 

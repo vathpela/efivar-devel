@@ -40,7 +40,14 @@ typedef enum {
 	MAX_SECDB_TYPE
 } efi_secdb_type_t;
 
+typedef enum {
+	EFI_SECDB_SORT,
+	EFI_SECDB_INVALID	// must be last entry
+} efi_secdb_flag_t;
+
 extern efi_secdb_t *efi_secdb_new(void);
+extern int efi_secdb_set_bool(efi_secdb_t *secdb,
+			      efi_secdb_flag_t flag, bool value);
 extern int efi_secdb_parse(uint8_t *data, size_t datasz, efi_secdb_t **secdbp);
 extern int efi_secdb_add_entry(efi_secdb_t *secdb,
 			       const efi_guid_t *owner,

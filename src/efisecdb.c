@@ -286,9 +286,10 @@ main(int argc, char *argv[])
 	bool annotate = false;
 	bool wants_add_actions = false;
 	bool did_list_guids = false;
+	bool do_sort = true;
 	int status = 0;
 
-	const char sopts[] = ":aAc:dfg:h:i:Lo:rt:v?";
+	const char sopts[] = ":aAc:dfg:h:i:LNo:rt:v?";
 	const struct option lopts[] = {
 		{"add", no_argument, NULL, 'a' },
 		{"annotate", no_argument, NULL, 'A' },
@@ -299,6 +300,7 @@ main(int argc, char *argv[])
 		{"hash", required_argument, NULL, 'h' },
 		{"infile", required_argument, NULL, 'i' },
 		{"list-guids", no_argument, NULL, 'L' },
+		{"no-sort", no_argument, NULL, 'N' },
 		{"outfile", required_argument, NULL, 'o' },
 		{"remove", no_argument, NULL, 'r' },
 		{"type", required_argument, NULL, 't' },
@@ -397,6 +399,9 @@ main(int argc, char *argv[])
 			list_guids();
 			did_list_guids = true;
 			break;
+		case 'N':
+			do_sort = false;
+			break;
 		case 'o':
 			if (outfile)
 				secdb_errx(1, "--outfile cannot be used multiple times.");
@@ -450,6 +455,8 @@ main(int argc, char *argv[])
 	if (!secdb)
 		err(1, "could not allocate memory");
 	debug("top secdb:%p", secdb);
+
+	efi_secdb_set_bool(secdb, EFI_SECDB_SORT, do_sort);
 
 	for_each_ptr_safe(pos, tmp, &infiles) {
 		int infd = -1;

@@ -43,6 +43,7 @@ typedef struct secdb_entry secdb_entry_t;
 struct efi_secdb {
 	list_t list;			// link to our next signature sublist
 
+	uint64_t flags;			// bitmask of boolean flags
 	efi_secdb_type_t algorithm;	// signature type
 	uint32_t listsz;		// esl_size + (hdrsz + nsigs) * sigsz
 	uint32_t hdrsz;			// total size of header

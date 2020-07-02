@@ -22,6 +22,8 @@ efi_secdb_new(void)
 	INIT_LIST_HEAD(&secdb->list);
 	INIT_LIST_HEAD(&secdb->entries);
 
+	efi_secdb_set_bool(secdb, EFI_SECDB_SORT, true);
+
 	return secdb;
 }
 
@@ -42,7 +44,7 @@ find_secdb_entry(efi_secdb_t *top, efi_secdb_type_t algorithm, size_t datasz)
 	efi_guid_to_id_guid(secdb_guid_from_type(algorithm), &algstr);
 	debug("searching for entry with type:%s sz:%zd datasz:%zd", algstr, sigsz, datasz);
 	xfree(algstr);
-	for_each_secdb(pos, &top->list) {
+	for_each_secdb_prev(pos, &top->list) {
 		efi_secdb_t *candidate;
 
 		candidate = list_entry(pos, efi_secdb_t, list);
@@ -81,6 +83,7 @@ alloc_secdb_entry(efi_secdb_t *top,
 	secdb->algorithm = algorithm;
 	secdb->hdrsz = secdb_header_size_from_type(algorithm);
 	secdb->sigsz = sigsz;
+	secdb->flags = top->flags;
 	debug("Adding secdb:%p to top:%p with hdrsz:%zd sigsz:%zd",
 	      secdb, top, secdb->hdrsz, secdb->sigsz);
 	list_add_tail(&secdb->list, &top->list);
@@ -109,14 +112,6 @@ find_or_alloc_secdb_entry(efi_secdb_t *top,
 		secdb = alloc_secdb_entry(top, algorithm, datasz);
 		if (!secdb)
 			return NULL;
-
-		INIT_LIST_HEAD(&secdb->entries);
-		INIT_LIST_HEAD(&secdb->list);
-		secdb->hdrsz = secdb_header_size_from_type(algorithm);
-		secdb->sigsz = sigsz;
-		debug("Adding secdb:%p to top:%p with hdrsz:%zd sigsz:%zd",
-		      secdb, top, secdb->hdrsz, secdb->sigsz);
-		list_add(&secdb->list, &top->list);
 	}
 	secdb->algorithm = algorithm;
 	secdb->sigsz = sigsz;
@@ -193,7 +188,7 @@ secdb_add_entry_data(efi_secdb_t *secdb,
 	memcpy(&new->owner, owner, sizeof(efi_guid_t));
 	debug("Adding to secdb:%p entry:%p owner:%p data:%p-%p datasz:%zd",
 	      secdb, new, &new->owner, &new->data, &new->data+datasz, datasz);
-	list_add(&new->list, &secdb->entries);
+	list_add_tail(&new->list, &secdb->entries);
 	debug("nsigs:%zd -> %zd", secdb->nsigs, secdb->nsigs+1);
 	secdb->nsigs += 1;
 	if (secdb->nsigs == 1 &&
@@ -253,9 +248,11 @@ efi_secdb_add_entry_or_secdb(efi_secdb_t *top,
 
 	debug("adding %zd bytes of data", datasz);
 	secdb_add_entry_data(secdb, owner, data, datasz);
-	if (secdb->sigsz)
-		list_sort(&secdb->entries, secdb_entry_cmp, &datasz);
-	list_sort(&top->list, secdb_cmp, NULL);
+	if (secdb->flags & (1ul << EFI_SECDB_SORT)) {
+		if (secdb->sigsz)
+			list_sort(&secdb->entries, secdb_entry_cmp, &datasz);
+		list_sort(&top->list, secdb_cmp, NULL);
+	}
 
 	return 0;
 }
@@ -271,6 +268,30 @@ efi_secdb_add_entry(efi_secdb_t *top,
 		    size_t datasz)
 {
 	return efi_secdb_add_entry_or_secdb(top, owner, algorithm, data, datasz, false);
+}
+
+int PUBLIC
+efi_secdb_set_bool(efi_secdb_t *secdb,
+		   efi_secdb_flag_t flag, bool value)
+{
+	if (!secdb) {
+		efi_error("invalid secdb");
+		errno = EINVAL;
+		return -1;
+	}
+
+	if (flag < 0 || flag >= EFI_SECDB_INVALID) {
+		efi_error("invalid flag '%d'", flag);
+		errno = EINVAL;
+		return -1;
+	}
+
+	if (value)
+		secdb->flags |= (1ul << flag);
+	else
+		secdb->flags &= ~(1ul << flag);
+
+	return 0;
 }
 
 /*
@@ -305,6 +326,8 @@ efi_secdb_parse(uint8_t *data, size_t datasz, efi_secdb_t **secdbp)
 			return -1;
 		new_secdb = true;
 	}
+	sort = secdb->flags & (1ul << EFI_SECDB_SORT);
+
 	debug("adding %zd bytes to secdb %p", datasz, secdb);
 
 	rc = esl_iter_new(&iter, data, datasz);
@@ -369,7 +392,8 @@ efi_secdb_parse(uint8_t *data, size_t datasz, efi_secdb_t **secdbp)
 
 	esl_iter_end(iter);
 
-	list_sort(&secdb->list, secdb_cmp, NULL);
+	if (sort)
+		list_sort(&secdb->list, secdb_cmp, NULL);
 
 	*secdbp = secdb;
 	return 0;

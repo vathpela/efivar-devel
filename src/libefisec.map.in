@@ -11,4 +11,5 @@ LIBEFISEC_1.38 {
 		efi_secdb_new;
 		efi_secdb_parse;
 		efi_secdb_realize;
+		efi_secdb_set_bool;
 } libefisec.so.0;

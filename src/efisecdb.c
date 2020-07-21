@@ -525,7 +525,9 @@ main(int argc, char *argv[])
 	if (outfd < 0)
 		err(1, "could not open \"%s\"", outfile);
 
-	ftruncate(outfd, 0);
+	rc = ftruncate(outfd, 0);
+	if (rc < 0)
+		err(1, "could not ftruncate \"%s\"", outfile);
 
 	void *output;
 	size_t size = 0;
@@ -537,7 +539,9 @@ main(int argc, char *argv[])
 	if (rc < 0)
 		err(1, "could not write signature list");
 
-	ftruncate(outfd, size);
+	rc = ftruncate(outfd, size);
+	if (rc < 0)
+		err(1, "could not ftruncate \"%s\"", outfile);
 	close(outfd);
 	xfree(output);
 

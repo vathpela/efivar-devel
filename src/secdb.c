@@ -252,8 +252,9 @@ efi_secdb_add_entry_or_secdb(efi_secdb_t *top,
 	debug("adding %zd bytes of data", datasz);
 	secdb_add_entry_data(secdb, owner, data, datasz);
 	if (secdb->flags & (1ul << EFI_SECDB_SORT_DATA)) {
-		if (secdb->sigsz)
+		if (secdb->sigsz) {
 			list_sort(&secdb->entries, secdb_entry_cmp, &datasz);
+		}
 	}
 	if (secdb->flags & (1ul << EFI_SECDB_SORT)) {
 		list_sort(&top->list, secdb_cmp, NULL);
@@ -397,16 +398,17 @@ efi_secdb_parse(uint8_t *data, size_t datasz, efi_secdb_t **secdbp)
 
 	esl_iter_end(iter);
 
-	if (sort)
+	if (sort) {
 		list_sort(&secdb->list, secdb_cmp, NULL);
+	}
 
 	*secdbp = secdb;
 	return 0;
 }
 
 struct visitor_state {
+	/* listnum from the previous invocation */
 	unsigned int listnum;
-	unsigned int signum;
 
 	efi_signature_list_t *esl;
 
@@ -443,7 +445,7 @@ secdb_realize_visitor(unsigned int listnum, unsigned int signum,
 
 	esdsz = datasz + (has_owner ? sizeof(efi_guid_t) : 0);
 
-	debug("listnum:%d signum:%d", listnum, signum);
+	debug("listnum:%d signum:%d has_owner:%d", listnum, signum, has_owner);
 	if (listnum > state->listnum || signum == 0) {
 		allocsz = ALIGN_UP(state->pos
 				   + sizeof(state->esl)
@@ -466,37 +468,35 @@ secdb_realize_visitor(unsigned int listnum, unsigned int signum,
 		esl->signature_list_size = sizeof(efi_signature_list_t) + headersz;
 		esl->signature_header_size = headersz;
 		esl->signature_size = esdsz;
-		size_t pos = ((char *)esl
-			      + offsetof(efi_signature_list_t, signature_size)
-			      + sizeof(esl->signature_size)) - buf;
-		state->pos = pos;
+		state->pos += sizeof(*esl);
 		if (header && headersz > 0)
 			memcpy(buf+state->pos, header, headersz);
 		state->pos += headersz;
 		esd = (efi_signature_data_t *)(buf + state->pos);
-		debug("esl[%u]:%p esd[%u]:%p", listnum, esl, signum, esd);
 	} else {
 		allocsz = ALIGN_UP(state->pos + esdsz,
 				   page_size);
 		buf = realloc(state->buf, allocsz);
+		skew = buf - state->buf;
 		if (!buf) {
 			efi_error("could not allocate %zd bytes", allocsz);
 			return ERROR;
 		}
-		skew = buf - state->buf;
 		memset(buf + state->pos, 0, allocsz - state->pos);
 		esl = (efi_signature_list_t *)
 			((char *)state->esl + skew);
 		state->buf = buf;
 		state->esl = esl;
 		esd = (efi_signature_data_t *)(buf + state->pos);
-		debug("esl[%u]:%p esd[%u]:%p", listnum, esl, signum, esd);
 	}
+	debug("esl[%u]:%p esd[%u]:%p", listnum, esl, signum, esd);
 
 	memcpy(&esd->signature_owner, owner, sizeof(efi_guid_t));
 	memcpy(&esd->signature_data[0], data, datasz);
-	state->pos += esdsz;
 	esl->signature_list_size += esdsz;
+
+	state->pos += esdsz;
+	state->listnum = listnum;
 
 	return CONTINUE;
 }
@@ -547,7 +547,6 @@ secdb_free_entry(efi_secdb_t *secdb)
 			efi_error("could not determine signature type");
 
 		list_del(&entry->list);
-		//memset(&entry->data, 0, secdb->sigsz - (has_owner ? sizeof(efi_guid_t) : 0));
 		xfree(entry);
 	}
 
@@ -597,8 +596,12 @@ secdb_visit_entries(efi_secdb_t *secdb, int i,
 		secdb_entry_t *entry = list_entry(pos, secdb_entry_t, list);
 		efi_secdb_visitor_status_t status;
 
-		debug("secdb[%d]:%p entry[%d]:%p pos:%p = {%p, %p}", i, secdb, j, entry, pos, pos ? pos->prev : 0, pos ? pos->next : 0);
-		debug("secdb[%d]:%p entry[%d]:%p owner:%p data:%p-%p datasz:%zd", i, secdb, j, entry, &entry->owner, &entry->data, &entry->data+datasz, datasz);
+		debug("secdb[%d]:%p entry[%d]:%p pos:%p = {%p, %p}",
+		      i, secdb, j, entry, pos,
+		      pos ? pos->prev : 0, pos ? pos->next : 0);
+		debug("secdb[%d]:%p entry[%d]:%p owner:%p data:%p-%p datasz:%zd",
+		      i, secdb, j, entry,
+		      &entry->owner, &entry->data, &entry->data+datasz, datasz);
 		status = visitor(i, j++, &entry->owner,
 				 secdb->algorithm,
 				 NULL, 0,
@@ -624,8 +627,10 @@ efi_secdb_visit_entries(efi_secdb_t *top,
 	for_each_secdb_safe(pos, tmp, &top->list) {
 		efi_secdb_t *secdb = list_entry(pos, efi_secdb_t, list);
 
-		debug("secdb[%d]:%p pos:%p = {%p, %p}", i, secdb, pos, pos ? pos->prev : 0, pos ? pos->next : 0);
-		debug("secdb[%d]:%p nsigs:%d sigsz:%d", i, secdb, secdb->nsigs, secdb->sigsz);
+		debug("secdb[%d]:%p pos:%p = {%p, %p}",
+		      i, secdb, pos, pos ? pos->prev : 0, pos ? pos->next : 0);
+		debug("secdb[%d]:%p nsigs:%d sigsz:%d",
+		      i, secdb, secdb->nsigs, secdb->sigsz);
 		status = secdb_visit_entries(secdb, i++, visitor, closure);
 		if (status == ERROR)
 			return -1;

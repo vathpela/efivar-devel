@@ -404,8 +404,9 @@ esl_list_iter_next_with_size_correction(esl_list_iter *iter, efi_guid_t *type,
 			   + iter->esl->signature_header_size;
 	debug("sizeof(esl):%zd shs:%zd hdrsz:%zd", sizeof(efi_signature_list_t), iter->esl->signature_header_size, header_sz);
 	*type = iter->esl->signature_type;
+
 	*data = (efi_signature_data_t *)((uint8_t *)iter->esl + header_sz);
-	*len = iter->esl->signature_list_size - sizeof (efi_signature_list_t);
+	*len = iter->esl->signature_size;
 
 	return 1;
 }

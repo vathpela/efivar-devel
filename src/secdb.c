@@ -37,7 +37,7 @@ find_secdb_entry(efi_secdb_t *top, efi_secdb_type_t algorithm, size_t datasz)
 	efi_secdb_t *secdb = NULL;
 	list_t *pos;
 	size_t sigsz = (algorithm == X509_CERT)
-		       ? datasz
+		       ? (datasz + sizeof(efi_guid_t))
 		       : secdb_entry_size_from_type(algorithm);
 	char *algstr = NULL;
 
@@ -227,7 +227,7 @@ efi_secdb_add_entry_or_secdb(efi_secdb_t *top,
 	if (secdb_entry_has_owner_from_type(algorithm, &has_owner) < 0)
 		return -1;
 
-	sigsz = datasz + has_owner ? sizeof(*owner) : 0;
+	sigsz = datasz + (has_owner ? sizeof(*owner) : 0);
 
 	if (force_new_secdb) {
 		debug("forcing new secdb entry (has_owner:%d)", has_owner);
@@ -235,9 +235,9 @@ efi_secdb_add_entry_or_secdb(efi_secdb_t *top,
 		secdb->algorithm = algorithm;
 		secdb->sigsz = datasz;
 	} else {
-		secdb = find_or_alloc_secdb_entry(top, algorithm, datasz);
 		debug("finding secdb alg:%d datasz:%zd sigsz:%zd has_owner:%d",
 		      algorithm, datasz, sigsz, has_owner);
+		secdb = find_or_alloc_secdb_entry(top, algorithm, sigsz);
 	}
 	if (!secdb)
 		return -1;
@@ -431,8 +431,14 @@ secdb_realize_visitor(unsigned int listnum, unsigned int signum,
 	ptrdiff_t skew;
 	efi_signature_list_t *esl;
 	efi_signature_data_t *esd;
+	bool has_owner = true;
+	int rc;
 
-	esdsz = sizeof(efi_guid_t) + datasz;
+	rc = secdb_entry_has_owner_from_type(algorithm, &has_owner);
+	if (rc < 0)
+		efi_error("could not determine signature type");
+
+	esdsz = datasz + (has_owner ? sizeof(efi_guid_t) : 0);
 
 	debug("listnum:%d signum:%d", listnum, signum);
 	if (listnum > state->listnum || signum == 0) {

@@ -6,7 +6,7 @@
 
 #include "efivar.h"
 
-size_t HIDDEN page_size;
+size_t HIDDEN page_size = 4096;
 
 void CONSTRUCTOR
 set_up_global_constants(void)

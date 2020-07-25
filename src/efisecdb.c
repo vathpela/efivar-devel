@@ -561,8 +561,12 @@ sort_err:
 
 	debug("adding output file %s", outfile);
 	outfd = open(outfile, flags, 0600);
-	if (outfd < 0)
-		err(1, "could not open \"%s\"", outfile);
+	if (outfd < 0) {
+		char *tmpoutfile = outfile;
+		if (errno == EEXIST)
+			outfile = NULL;
+		err(1, "could not open \"%s\"", tmpoutfile);
+	}
 
 	rc = ftruncate(outfd, 0);
 	if (rc < 0)

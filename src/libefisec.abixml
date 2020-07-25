@@ -264,11 +264,12 @@
         <var-decl name='time_of_revocation' type-id='type-id-61' visibility='default' filepath='src/include/efivar/efisec-types.h' line='47' column='1'/>
       </data-member>
     </class-decl>
-    <typedef-decl name='efi_secdb_flag_t' type-id='type-id-67' filepath='src/include/efivar/efisec-secdb.h' line='46' column='1' id='type-id-68'/>
+    <typedef-decl name='efi_secdb_flag_t' type-id='type-id-67' filepath='src/include/efivar/efisec-secdb.h' line='47' column='1' id='type-id-68'/>
     <enum-decl name='__anonymous_enum__1' is-anonymous='yes' filepath='src/include/efivar/efisec-secdb.h' line='43' column='1' id='type-id-67'>
       <underlying-type type-id='type-id-26'/>
       <enumerator name='EFI_SECDB_SORT' value='0'/>
-      <enumerator name='EFI_SECDB_INVALID' value='1'/>
+      <enumerator name='EFI_SECDB_SORT_DATA' value='1'/>
+      <enumerator name='EFI_SECDB_INVALID' value='2'/>
     </enum-decl>
     <typedef-decl name='secdb_alg_t' type-id='type-id-69' filepath='src/secdb.h' line='28' column='1' id='type-id-70'/>
     <class-decl name='__anonymous_struct__5' size-in-bits='384' is-struct='yes' is-anonymous='yes' naming-typedef-id='type-id-70' visibility='default' filepath='src/secdb.h' line='21' column='1' id='type-id-69'>

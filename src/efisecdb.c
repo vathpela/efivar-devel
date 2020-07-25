@@ -287,9 +287,10 @@ main(int argc, char *argv[])
 	bool wants_add_actions = false;
 	bool did_list_guids = false;
 	bool do_sort = true;
+	bool do_sort_data = false;
 	int status = 0;
 
-	const char sopts[] = ":aAc:dfg:h:i:LNo:rt:v?";
+	const char sopts[] = ":aAc:dfg:h:i:Lo:rs:t:v?";
 	const struct option lopts[] = {
 		{"add", no_argument, NULL, 'a' },
 		{"annotate", no_argument, NULL, 'A' },
@@ -300,9 +301,9 @@ main(int argc, char *argv[])
 		{"hash", required_argument, NULL, 'h' },
 		{"infile", required_argument, NULL, 'i' },
 		{"list-guids", no_argument, NULL, 'L' },
-		{"no-sort", no_argument, NULL, 'N' },
 		{"outfile", required_argument, NULL, 'o' },
 		{"remove", no_argument, NULL, 'r' },
+		{"sort", required_argument, NULL, 's' },
 		{"type", required_argument, NULL, 't' },
 		{"verbose", no_argument, NULL, 'v' },
 		{"usage", no_argument, NULL, '?' },
@@ -399,8 +400,26 @@ main(int argc, char *argv[])
 			list_guids();
 			did_list_guids = true;
 			break;
-		case 'N':
-			do_sort = false;
+		case 's':
+			if (optarg == NULL) {
+sort_err:
+				secdb_errx(1, "--sort requires one of \"type\", \"data\", \"all\", or \"none\"");
+			}
+			if (!strcmp(optarg, "type")) {
+				do_sort = true;
+				do_sort_data = false;
+			} else if (!strcmp(optarg, "data")) {
+				do_sort = false;
+				do_sort_data = true;
+			} else if (!strcmp(optarg, "all")) {
+				do_sort = true;
+				do_sort_data = true;
+			} else if (!strcmp(optarg, "none")) {
+				do_sort = false;
+				do_sort_data = false;
+			} else {
+				goto sort_err;
+			}
 			break;
 		case 'o':
 			if (outfile)
@@ -457,6 +476,7 @@ main(int argc, char *argv[])
 	debug("top secdb:%p", secdb);
 
 	efi_secdb_set_bool(secdb, EFI_SECDB_SORT, do_sort);
+	efi_secdb_set_bool(secdb, EFI_SECDB_SORT_DATA, do_sort_data);
 
 	for_each_ptr_safe(pos, tmp, &infiles) {
 		int infd = -1;

@@ -42,6 +42,7 @@ typedef enum {
 
 typedef enum {
 	EFI_SECDB_SORT,
+	EFI_SECDB_SORT_DATA,
 	EFI_SECDB_INVALID	// must be last entry
 } efi_secdb_flag_t;
 

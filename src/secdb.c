@@ -23,6 +23,7 @@ efi_secdb_new(void)
 	INIT_LIST_HEAD(&secdb->entries);
 
 	efi_secdb_set_bool(secdb, EFI_SECDB_SORT, true);
+	efi_secdb_set_bool(secdb, EFI_SECDB_SORT_DATA, false);
 
 	return secdb;
 }
@@ -250,9 +251,11 @@ efi_secdb_add_entry_or_secdb(efi_secdb_t *top,
 
 	debug("adding %zd bytes of data", datasz);
 	secdb_add_entry_data(secdb, owner, data, datasz);
-	if (secdb->flags & (1ul << EFI_SECDB_SORT)) {
+	if (secdb->flags & (1ul << EFI_SECDB_SORT_DATA)) {
 		if (secdb->sigsz)
 			list_sort(&secdb->entries, secdb_entry_cmp, &datasz);
+	}
+	if (secdb->flags & (1ul << EFI_SECDB_SORT)) {
 		list_sort(&top->list, secdb_cmp, NULL);
 	}
 
@@ -381,7 +384,7 @@ efi_secdb_parse(uint8_t *data, size_t datasz, efi_secdb_t **secdbp)
 			if (corrected)
 				debug("forcing new secdb due to size correction");
 			else if (rc == ESL_ITER_NEW_LIST && !sort)
-				debug("forcing new secdb due to new input ESL --no-sort");
+				debug("forcing new secdb due to new input ESL sort!=type");
 			else
 				debug("wth?  why is force set");
 		}

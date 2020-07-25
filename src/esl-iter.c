@@ -105,7 +105,7 @@ esl_iter_next_with_size_correction(esl_iter *iter, efi_guid_t *type,
 	iter->i += 1;
 
 	if (iter->i == iter->nmemb) {
-		debug("Getting next efi_signature_data_t");
+		debug("Getting next efi_signature_data_t (correct_size:%d)", correct_size);
 		iter->i = 0;
 		if (correct_size)
 			rc = esl_list_iter_next_with_size_correction(iter->iter, type, &iter->esd, &iter->len, true);
@@ -116,19 +116,23 @@ esl_iter_next_with_size_correction(esl_iter *iter, efi_guid_t *type,
 				efi_error("esl_list_iter_next() failed");
 			return rc;
 		}
+		debug("type:%p data:%p len:%zd", type, iter->esd, iter->len);
 		status = ESL_ITER_NEW_LIST;
 
 		if (!efi_guid_cmp(type, &efi_guid_x509_cert)) {
 			int32_t asn1size;
 
+			//hexdumpat(iter->esd->signature_data,
+			//	  iter->len - sizeof (iter->esd->signature_owner), sizeof(efi_signature_list_t) + sizeof(iter->esd->signature_owner));
 			asn1size = get_asn1_seq_size(iter->esd->signature_data,
 				iter->len - sizeof (iter->esd->signature_owner));
+			debug("iter->len:%d sizeof(owner):%zd bufsz:%zd asn1sz:%zd", iter->len, sizeof(iter->esd->signature_owner), iter->len - sizeof (iter->esd->signature_owner), asn1size);
 
 			if (asn1size < 0) {
 				debug("iterator data claims to be an X.509 Cert but is not valid ASN.1 DER");
 			} else if ((uint32_t)asn1size != iter->len -
 					sizeof (iter->esd->signature_owner)) {
-				debug("X.509 Cert ASN.1 size does not match signature_List Size (%d vs %zu)",
+				debug("X.509 Cert ASN.1 size does not match signature_list Size (%d vs %zu)",
 				      asn1size, iter->len -
 					sizeof (iter->esd->signature_owner));
 			}
@@ -296,7 +300,7 @@ esl_list_iter_next_with_size_correction(esl_list_iter *iter, efi_guid_t *type,
 	}
 
 	if (!iter->esl) {
-		debug("Getting next ESL buffer");
+		debug("Getting next ESL buffer (correct_size:%d)", correct_size);
 		iter->esl = (efi_signature_list_t *)iter->buf;
 
 		debug("list has %lu bytes left, element is %"PRIu32" bytes",
@@ -349,13 +353,13 @@ esl_list_iter_next_with_size_correction(esl_list_iter *iter, efi_guid_t *type,
 			int32_t asn1size;
 
 			asn1size = get_asn1_seq_size(
-				((uint8_t *)*data) + sizeof (efi_guid_t),
+				iter->buf + iter->offset + sizeof (efi_guid_t),
 				*len - sizeof (efi_guid_t));
 			if (asn1size < 0) {
 				debug("iterator data claims to be an X.509 Cert but is not valid ASN.1 DER");
 			} else if ((uint32_t)asn1size != iter->esl->signature_size
 							 - sizeof (efi_guid_t)) {
-				debug("X.509 Cert ASN.1 size does not match signature_List Size (%d vs %zu)",
+				debug("X.509 Cert ASN.1 size does not match signature_list_size (%d vs %zu)",
 				      asn1size, iter->esl->signature_size -
 						sizeof (efi_guid_t));
 			}
@@ -375,8 +379,8 @@ esl_list_iter_next_with_size_correction(esl_list_iter *iter, efi_guid_t *type,
 	if (!memcmp(&esl, iter->esl, sizeof (esl)))
 		return 0;
 
-	debug("signature list size:%d iter->len:%zd iter->offset:%zd",
-	      iter->esl->signature_list_size, iter->len, iter->offset);
+	debug("signature list size:%d iter->len:%zd iter->offset:%zd signature_size:%zd",
+	      iter->esl->signature_list_size, iter->len, iter->offset, iter->esl->signature_size);
 	/* if this list size is too big for our data, then it's malformed */
 	if (iter->esl->signature_list_size > iter->len - iter->offset) {
 		debug("EFI_SIGNATURE_LIST is malformed");
@@ -395,10 +399,12 @@ esl_list_iter_next_with_size_correction(esl_list_iter *iter, efi_guid_t *type,
 		}
 	}
 
+//	hexdumpat((void *)iter->esl, iter->len, 0);
+	size_t header_sz = sizeof (efi_signature_list_t)
+			   + iter->esl->signature_header_size;
+	debug("sizeof(esl):%zd shs:%zd hdrsz:%zd", sizeof(efi_signature_list_t), iter->esl->signature_header_size, header_sz);
 	*type = iter->esl->signature_type;
-	*data = (efi_signature_data_t *)((intptr_t)iter->esl
-			+ sizeof (efi_signature_list_t)
-			+ iter->esl->signature_header_size);
+	*data = (efi_signature_data_t *)((uint8_t *)iter->esl + header_sz);
 	*len = iter->esl->signature_list_size - sizeof (efi_signature_list_t);
 
 	return 1;

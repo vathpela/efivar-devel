@@ -317,7 +317,7 @@
     <pointer-type-def type-id='type-id-9' size-in-bits='64' id='type-id-85'/>
     <pointer-type-def type-id='type-id-30' size-in-bits='64' id='type-id-39'/>
     <pointer-type-def type-id='type-id-39' size-in-bits='64' id='type-id-86'/>
-    <function-decl name='efi_get_libefisec_version' mangled-name='efi_get_libefisec_version' filepath='src/list.h' line='11' column='1' visibility='default' binding='global' size-in-bits='64' elf-symbol-id='efi_get_libefisec_version@@LIBEFISEC_1.38'>
+    <function-decl name='efi_get_libefisec_version' mangled-name='efi_get_libefisec_version' filepath='src/esl-iter.c' line='11' column='1' visibility='default' binding='global' size-in-bits='64' elf-symbol-id='efi_get_libefisec_version@@LIBEFISEC_1.38'>
       <return type-id='type-id-32'/>
     </function-decl>
     <function-decl name='efi_secdb_del_entry' mangled-name='efi_secdb_del_entry' visibility='default' binding='global' size-in-bits='64' elf-symbol-id='efi_secdb_del_entry@@LIBEFISEC_1.38'>

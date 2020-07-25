@@ -73,7 +73,7 @@ alloc_secdb_entry(efi_secdb_t *top,
 		       ? datasz
 		       : secdb_entry_size_from_type(algorithm);
 
-	debug("allocating new secdb entry");
+	debug("allocating new secdb entry alg %d", algorithm);
 	secdb = efi_secdb_new();
 	if (!secdb)
 		return NULL;
@@ -224,18 +224,20 @@ efi_secdb_add_entry_or_secdb(efi_secdb_t *top,
 		return -1;
 	}
 
-	if (secdb_entry_has_owner_from_type(algorithm, &has_owner) <0)
+	if (secdb_entry_has_owner_from_type(algorithm, &has_owner) < 0)
 		return -1;
 
 	sigsz = datasz + has_owner ? sizeof(*owner) : 0;
 
 	if (force_new_secdb) {
-		debug("forcing new secdb entry");
+		debug("forcing new secdb entry (has_owner:%d)", has_owner);
 		secdb = alloc_secdb_entry(top, algorithm, sigsz);
 		secdb->algorithm = algorithm;
 		secdb->sigsz = datasz;
 	} else {
 		secdb = find_or_alloc_secdb_entry(top, algorithm, datasz);
+		debug("finding secdb alg:%d datasz:%zd sigsz:%zd has_owner:%d",
+		      algorithm, datasz, sigsz, has_owner);
 	}
 	if (!secdb)
 		return -1;
